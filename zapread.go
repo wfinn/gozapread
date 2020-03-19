@@ -18,9 +18,9 @@ import (
 var client http.Client
 
 func CheckClient() {
-        if client.Jar == nil {
-                panic("client not initialized (call Login first)")
-        }
+	if client.Jar == nil {
+		panic("client not initialized (call Login first)")
+	}
 }
 
 func Login(user, pass string) error {
@@ -35,7 +35,7 @@ func Login(user, pass string) error {
 			logindetails := url.Values{"__RequestVerificationToken": {token}, "UserName": {user}, "Password": {pass}, "RememberMe": {"false"}}
 			if res, err := client.PostForm("https://www.zapread.com/Account/Login/", logindetails); err == nil {
 				if body, err := ioutil.ReadAll(res.Body); err == nil {
-					if strings.Contains(string(body), "/Account/LogOff/") {//TODO better validation?
+					if strings.Contains(string(body), "/Account/LogOff/") { //TODO better validation?
 						return nil
 					}
 				}
@@ -127,7 +127,7 @@ type Post struct {
 type PostResponse struct {
 	Result      string `json:"result"`
 	Success     bool   `json:"success"`
-	PostID      uint    `json:"postId"`
+	PostID      uint   `json:"postId"`
 	HTMLContent string `json:"HTMLContent"`
 }
 
@@ -158,10 +158,10 @@ func SubmitNewPost(title, content string, groupid uint) (PostResponse, error) {
 
 		}
 	}
-	return *new(PostResponse), errors.New("Blah")
+	return *new(PostResponse), errors.New("SubmitNewPost failed")
 }
 
-func DismissMessage(id uint) bool {
+func DismissMessage(id uint) error {
 	CheckClient()
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
 	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
@@ -170,12 +170,14 @@ func DismissMessage(id uint) bool {
 		defer res.Body.Close()
 		if err == nil {
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
-				return string(body) == `{"Result":"Success"}`
+				if string(body) == `{"Result":"Success"}` {
+					return nil
+				}
 			}
 		}
 
 	}
-	return false
+	return errors.New("DismissMessage failed")
 }
 
 type Comment struct {
@@ -185,7 +187,7 @@ type Comment struct {
 	IsReply        bool   `json:"IsReply"`
 }
 
-func AddComment(content string, postid, commentid uint) {
+func AddComment(content string, postid, commentid uint) error {
 	CheckClient()
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
 	if j, err := json.Marshal(comment); err == nil {
@@ -199,8 +201,9 @@ func AddComment(content string, postid, commentid uint) {
 					defer res.Body.Close()
 					if err == nil {
 						if body, err := ioutil.ReadAll(res.Body); err == nil {
-							fmt.Println(string(body))
-							//Return Error if ! strings.Contains(string(body), `"success":true`)
+							if strings.Contains(string(body), `"success":true`) {
+								return nil
+							}
 						}
 					}
 				}
@@ -208,5 +211,6 @@ func AddComment(content string, postid, commentid uint) {
 
 		}
 	}
+	return errors.New("AddComment failed")
 
 }
