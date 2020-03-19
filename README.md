@@ -5,6 +5,8 @@ Some go code I need for building bots for [https://zapread.com](https://zapread.
 I had an idea for a zapread bot and therefore needed this.
 
 ## How it works (How it will work)
+
+### Example
 The ```gozapread.Login(user, pass string)``` function prepares an internal http.Client which handles the session for you.
 
 ```go
@@ -22,6 +24,11 @@ if resp, err := gozapread.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 19
 ```
 ### Login
 You should call Login before you do anything else, an internal http.Client has to be prepared, I panic if you don't do that.
+
+### Installation
+```sh
+go get -u github.com/wfinn/gozapread
+```
 
 ## Functions
 - **Login(user, pass string) error** prepares client
