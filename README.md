@@ -30,7 +30,7 @@ You should call Login before you do anything else, an internal http.Client has t
 go get -u github.com/wfinn/gozapread
 ```
 
-## Functions
+### Functions
 - **Login(user, pass string) error** prepares client
 - **extractToken(html string) string** can extract a token from a response body
 - TODO **GetNewToken(path string) (string, err)** Refactoring (See if path is nessecary, probably not)
@@ -39,6 +39,7 @@ go get -u github.com/wfinn/gozapread
 - **DismissMessage(id uint)** /Messages/DismissMessage
 - **GetGroupId(postId uint) uint** curl --silent https://www.zapread.com/Post/Detail/6126 | grep -o "data-groupid=\"[^\"]\*" | sed 's/^data-groupid="//'
 - **SubmitNewPost(title, body string, group uint) bool** /Post/SubmitNewPost/
+- TODO **ChangePassword(old, new string) error** /Manage/ChangePassword
 
 # Todo
 - list more functions that need to be implemented (I should probably parse them from zapread.com code...)
