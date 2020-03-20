@@ -23,9 +23,6 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 	fmt.Printf("New post with id %d", resp.PostID)
 }
 ```
-### Login
-You should call Login before you do anything else, I panic if you don't do that.
-
 ### Functions
 - **Login(user, pass string) error** prepares client
 - **extractToken(html string) string** can extract a token from a response body
