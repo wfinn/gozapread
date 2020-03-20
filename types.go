@@ -40,4 +40,3 @@ type Comment struct {
         CommentID      uint   `json:"CommentId"`
         IsReply        bool   `json:"IsReply"`
 }
-

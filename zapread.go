@@ -15,14 +15,11 @@ import (
 	"time"
 )
 
-
-type Client struct {
+type zapclient struct {
 	client http.Client
 }
 
-
-
-func Login(user, pass string) (Client, error) {
+func Login(user, pass string) (zapclient, error) {
 	cookieJar, _ := cookiejar.New(nil)
 	client := http.Client{
 		Jar:     cookieJar,
@@ -35,16 +32,16 @@ func Login(user, pass string) (Client, error) {
 			if res, err := client.PostForm("https://www.zapread.com/Account/Login/", logindetails); err == nil {
 				if body, err := ioutil.ReadAll(res.Body); err == nil {
 					if strings.Contains(string(body), "/Account/LogOff/") { //TODO better validation?
-						return Client{client}, nil
+						return zapclient{client}, nil
 					}
 				}
 			}
 		}
 	}
-	return Client{}, errors.New("Login failed")
+	return zapclient{}, errors.New("Login failed")
 }
 
-func (c Client) GetGroupId(postid uint) (result uint) {
+func (c zapclient) GetGroupId(postid uint) (result uint) {
 	if res, err := c.client.Get(fmt.Sprintf(`https://www.zapread.com/Post/Detail/%d`, postid)); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`data-groupid=\"[^\"]*`)
@@ -67,7 +64,7 @@ func extractRequestVerificationToken(html string) (result string) {
 	return
 }
 
-func (c Client) UnreadMessages() bool { //TODO return the uint instead
+func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
 	if res, err := c.client.Get("https://www.zapread.com/Messages/UnreadMessages/"); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			return !(string(body) == "0")
@@ -76,7 +73,7 @@ func (c Client) UnreadMessages() bool { //TODO return the uint instead
 	return false
 }
 
-func (c Client)  GetMessageTable() (MessageTable, error) {
+func (c zapclient) GetMessageTable() (MessageTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
 	req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/GetMessagesTable", bytes.NewBuffer([]byte(jsonStr)))
 	req.Header.Set("Content-Type", "application/json")
@@ -93,7 +90,7 @@ func (c Client)  GetMessageTable() (MessageTable, error) {
 	return *new(MessageTable), errors.New("Blah")
 }
 
-func (c Client)  SubmitNewPost(title, content string, groupid uint) (PostResponse, error) {
+func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResponse, error) {
 	post := Post{PostID: 0, Content: content, GroupID: groupid, UserID: false, Title: title, IsDraft: false, Language: "en"}
 	if j, err := json.Marshal(post); err == nil {
 		if res, err := c.client.Get("https://www.zapread.com/Post/NewPost/"); err == nil {
@@ -122,7 +119,7 @@ func (c Client)  SubmitNewPost(title, content string, groupid uint) (PostRespons
 	return *new(PostResponse), errors.New("SubmitNewPost failed")
 }
 
-func (c Client)  DismissMessage(id uint) error {
+func (c zapclient) DismissMessage(id uint) error {
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
 	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -140,7 +137,7 @@ func (c Client)  DismissMessage(id uint) error {
 	return errors.New("DismissMessage failed")
 }
 
-func (c Client) AddComment(content string, postid, commentid uint) error {
+func (c zapclient) AddComment(content string, postid, commentid uint) error {
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
 	if j, err := json.Marshal(comment); err == nil {
 		if res, err := c.client.Get("https://www.zapread.com/?l=1"); err == nil {
