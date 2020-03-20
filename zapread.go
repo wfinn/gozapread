@@ -17,12 +17,6 @@ import (
 
 var client http.Client
 
-func CheckClient() {
-	if client.Jar == nil {
-		panic("client not initialized (call Login first)")
-	}
-}
-
 func Login(user, pass string) error {
 	cookieJar, _ := cookiejar.New(nil)
 	client = http.Client{
@@ -43,6 +37,12 @@ func Login(user, pass string) error {
 		}
 	}
 	return errors.New("Login failed")
+}
+
+func CheckClient() {
+        if client.Jar == nil {
+                panic("client not initialized (call Login first)")
+        }
 }
 
 func GetGroupId(postid uint) (result uint) {
@@ -79,23 +79,6 @@ func UnreadMessages() bool { //TODO return the uint instead
 	return false
 }
 
-type MessageTable struct {
-	Draw            uint `json:"draw"`
-	RecordsTotal    uint `json:"recordsTotal"`
-	RecordsFiltered uint `json:"recordsFiltered"`
-	Data            []struct {
-		ID      uint   `json:"Id"`
-		Status  string `json:"Status"`
-		Type    string `json:"Type"`
-		From    string `json:"From"`
-		FromID  string `json:"FromID"`
-		Date    string `json:"Date"`
-		Link    string `json:"Link"`
-		Anchor  string `json:"Anchor"`
-		Message string `json:"Message"`
-	} `json:"data"`
-}
-
 func GetMessageTable() (MessageTable, error) {
 	CheckClient()
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
@@ -112,23 +95,6 @@ func GetMessageTable() (MessageTable, error) {
 		}
 	}
 	return *new(MessageTable), errors.New("Blah")
-}
-
-type Post struct {
-	PostID   uint   `json:"PostId"`
-	Content  string `json:"Content"`
-	GroupID  uint   `json:"GroupId"`
-	UserID   bool   `json:"UserId"`
-	Title    string `json:"Title"`
-	IsDraft  bool   `json:"IsDraft"`
-	Language string `json:"Language"`
-}
-
-type PostResponse struct {
-	Result      string `json:"result"`
-	Success     bool   `json:"success"`
-	PostID      uint   `json:"postId"`
-	HTMLContent string `json:"HTMLContent"`
 }
 
 func SubmitNewPost(title, content string, groupid uint) (PostResponse, error) {
@@ -180,13 +146,6 @@ func DismissMessage(id uint) error {
 	return errors.New("DismissMessage failed")
 }
 
-type Comment struct {
-	CommentContent string `json:"CommentContent"`
-	PostID         uint   `json:"PostId"`
-	CommentID      uint   `json:"CommentId"`
-	IsReply        bool   `json:"IsReply"`
-}
-
 func AddComment(content string, postid, commentid uint) error {
 	CheckClient()
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
@@ -212,5 +171,4 @@ func AddComment(content string, postid, commentid uint) error {
 		}
 	}
 	return errors.New("AddComment failed")
-
 }

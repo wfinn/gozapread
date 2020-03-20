@@ -19,16 +19,11 @@ zapread.com usually returns some json, I use [https://mholt.github.io/json-to-go
 Let's do something with the data SubmitNewPost returned.
 ```go
 if resp, err := gozapread.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); err == nil {
-	fmt.Println("New post with id " + resp.Link)
+	fmt.Printf("New post with id %d", resp.PostID)
 }
 ```
 ### Login
-You should call Login before you do anything else, an internal http.Client has to be prepared, I panic if you don't do that.
-
-### Installation
-```sh
-go get -u github.com/wfinn/gozapread
-```
+You should call Login before you do anything else, I panic if you don't do that.
 
 ### Functions
 - **Login(user, pass string) error** prepares client
