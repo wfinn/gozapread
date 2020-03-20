@@ -26,13 +26,17 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 ### Functions
 - **Login(user, pass string) error** prepares client
 - **extractToken(html string) string** can extract a token from a response body
-- TODO **GetNewToken(path string) (string, err)** Refactoring (See if path is nessecary, probably not)
 - **UnreadMessages() uint** /Messages/UnreadMessages/
 - **GetMessageTable()** /Messages/GetMessagesTable Unmarshal the json to a MessageTable
 - **DismissMessage(id uint)** /Messages/DismissMessage
 - **GetGroupId(postId uint) uint** curl --silent https://www.zapread.com/Post/Detail/6126 | grep -o "data-groupid=\"[^\"]\*" | sed 's/^data-groupid="//'
 - **SubmitNewPost(title, body string, group uint) bool** /Post/SubmitNewPost/
-- TODO **ChangePassword(old, new string) error** /Manage/ChangePassword
+#### Not Implemented
+- **ChangePassword(old, new string) error** /Manage/ChangePassword
+- **GetNewToken(path string) (string, error)** Refactoring (See if path is nessecary, probably not)
+- /Account/UserBalance/ there are multiple endpoints
+- /Messages/SendMessage/
+- /Manage/TipUser/
 
 # Todo
 - list more functions that need to be implemented (I should probably parse them from zapread.com code...)
