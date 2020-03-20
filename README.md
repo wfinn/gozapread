@@ -10,15 +10,16 @@ I had an idea for a zapread bot and therefore needed this.
 The ```gozapread.Login(user, pass string)``` function prepares an internal http.Client which handles the session for you.
 
 ```go
-if gozapread.Login("bot", "password") != nil {
+api, err := gozapread.Login("bot", "password")
+if err != nil {
 	log.Fatal("Login failed.")
 }
-gozapread.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199)
+api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199)
 ```
 zapread.com usually returns some json, I use [https://mholt.github.io/json-to-go/](https://mholt.github.io/json-to-go/) to prepare structs this data can be parsed to.
 Let's do something with the data SubmitNewPost returned.
 ```go
-if resp, err := gozapread.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); err == nil {
+if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); err == nil {
 	fmt.Printf("New post with id %d", resp.PostID)
 }
 ```
