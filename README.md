@@ -35,12 +35,12 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 - **TipUser(userid, amount uint) error** /Manage/TipUser/
 - **JoinGroup(groupid uint) error** /Group/JoinGroup/
 - **LeaveGroup(groupid uint) error** /Group/LeaveGroup/
+- **UserBalance() (uint, error)** /Account/UserBalance/
 #### Not Implemented
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
 - /Messages/SendMessage/
 - /Vote/Comment like /Vote/Post
 - /Home/TopPosts
-- /Account/GetBalance dont forget Limbo
 - /Messages/DismissAlert -1 means all
 - /Lightning/GetDepositInvoice/ {"amount":"1","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1} {"Invoice":"blah","Result":"success","Id":123456}
 - /Lightning/ValidatePaymentRequest {"request":"blah"} {"success":true,"num_satoshis":"1","destination":"blah"}

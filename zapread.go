@@ -80,7 +80,7 @@ func (c zapclient) GetMessageTable() (MessageTable, error) {
 	return *new(MessageTable), errors.New("Blah")
 }
 
-func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResponse, error) {
+func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp, error) {
 	post := Post{PostID: 0, Content: content, GroupID: groupid, UserID: false, Title: title, IsDraft: false, Language: "en"}
 	if j, err := json.Marshal(post); err == nil {
 		if token, err := c.GetNewToken(); err == nil {
@@ -91,7 +91,7 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostRespo
 				if err == nil {
 					defer res.Body.Close()
 					if body, err := ioutil.ReadAll(res.Body); err == nil {
-						var resp PostResponse
+						var resp PostResp
 						if json.Unmarshal(body, &resp) == nil {
 							if resp.Success {
 								return resp, nil
@@ -102,7 +102,7 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostRespo
 			}
 		}
 	}
-	return *new(PostResponse), errors.New("SubmitNewPost failed")
+	return *new(PostResp), errors.New("SubmitNewPost failed")
 }
 
 func (c zapclient) DismissMessage(id uint) error {
@@ -239,23 +239,37 @@ func (c zapclient) JoinGroup(groupid uint) error {
 }
 
 func (c zapclient) LeaveGroup(groupid uint) error {
-        jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
+	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
 
-        if token, err := c.GetNewToken(); err == nil {
-                if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/LeaveGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-                        req.Header.Set("Content-Type", "application/json")
-                        req.Header.Set("__RequestVerificationToken", token)
-                        res, err := c.client.Do(req)
-                        if err == nil {
-                                defer res.Body.Close()
-                                if body, err := ioutil.ReadAll(res.Body); err == nil {
-                                        if string(body) == `{"success":true}` {
-                                                return nil
-                                        }
-                                }
-                        }
-                }
-        }
-        return errors.New("LeaveGroup failed")
+	if token, err := c.GetNewToken(); err == nil {
+		if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/LeaveGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("__RequestVerificationToken", token)
+			res, err := c.client.Do(req)
+			if err == nil {
+				defer res.Body.Close()
+				if body, err := ioutil.ReadAll(res.Body); err == nil {
+					if string(body) == `{"success":true}` {
+						return nil
+					}
+				}
+			}
+		}
+	}
+	return errors.New("LeaveGroup failed")
 }
 
+func (c zapclient) UserBalance() (uint, error) {
+	if resp, err := c.client.Get("https://www.zapread.com/Account/UserBalance"); err == nil {
+		defer resp.Body.Close()
+		if body, err := ioutil.ReadAll(resp.Body); err == nil {
+			var resp BalanceResp
+			if json.Unmarshal(body, &resp) == nil {
+				return resp.Balance, nil
+			}
+
+		}
+
+	}
+	return 0, errors.New("GetUserBalance failed")
+}
