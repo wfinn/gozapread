@@ -27,18 +27,25 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 - **Login(user, pass string) error** prepares client
 - **UnreadMessages() uint** /Messages/UnreadMessages/
 - **GetMessageTable()** /Messages/GetMessagesTable Unmarshal the json to a MessageTable
-- **DismissMessage(id uint)** /Messages/DismissMessage
+- **DismissMessage(id uint)** /Messages/DismissMessage (should be int -1 means dismiss all)
 - **GetGroupId(postId uint) uint**
 - **SubmitNewPost(title, body string, group uint) bool** /Post/SubmitNewPost/
 - **AddComment** /Comment/AddComment
 - **GetNewToken(path string) (string, error)**
 #### Not Implemented
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
-- /Account/UserBalance/ there are multiple endpoints
 - /Messages/SendMessage/
+- /Vote/Comment like /Vote/Post
 - /Manage/TipUser/
+- /Home/TopPosts
+- /Account/GetBalance
+- /Group/JoinGroup/ {"gid":1} {"success":true} requres token as header
+- /Group/LeaveGroup same as JoinGroup
+- /Messages/DismissAlert -1 means all
+- /Lightning/GetDepositInvoice/ {"amount":"1","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1} {"Invoice":"blah","Result":"success","Id":123456}
+- /Lightning/ValidatePaymentRequest {"request":"blah"} {"success":true,"num_satoshis":"1","destination":"blah"}
+- /Lightning/SubmitPaymentRequest {"request":"blah"}
 
 # Todo
 - generate function list
-- list more functions that need to be implemented (I should probably parse them from zapread.com code...)
 - refactor the hell out of this mess
