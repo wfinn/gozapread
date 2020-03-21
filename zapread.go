@@ -78,8 +78,8 @@ func (c zapclient) GetMessageTable() (MessageTable, error) {
 	req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/GetMessagesTable", bytes.NewBuffer([]byte(jsonStr)))
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.client.Do(req)
-	defer res.Body.Close()
 	if err == nil {
+		defer res.Body.Close()
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			var messages MessageTable
 			if json.Unmarshal(body, &messages) == nil {
@@ -100,8 +100,8 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostRespo
 					req.Header.Set("Content-Type", "application/json")
 					req.Header.Set("__RequestVerificationToken", token)
 					res, err := c.client.Do(req)
-					defer res.Body.Close()
 					if err == nil {
+						defer res.Body.Close()
 						if body, err := ioutil.ReadAll(res.Body); err == nil {
 							var resp PostResponse
 							if json.Unmarshal(body, &resp) == nil {
@@ -124,8 +124,8 @@ func (c zapclient) DismissMessage(id uint) error {
 	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 		res, err := c.client.Do(req)
-		defer res.Body.Close()
 		if err == nil {
+			defer res.Body.Close()
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
 				if string(body) == `{"Result":"Success"}` {
 					return nil
@@ -147,8 +147,8 @@ func (c zapclient) AddComment(content string, postid, commentid uint) error {
 					req.Header.Set("Content-Type", "application/json")
 					req.Header.Set("__RequestVerificationToken", token)
 					res, err := c.client.Do(req)
-					defer res.Body.Close()
 					if err == nil {
+						defer res.Body.Close()
 						if body, err := ioutil.ReadAll(res.Body); err == nil {
 							if strings.Contains(string(body), `"success":true`) {
 								return nil
@@ -161,4 +161,31 @@ func (c zapclient) AddComment(content string, postid, commentid uint) error {
 		}
 	}
 	return errors.New("AddComment failed")
+}
+
+func (c zapclient) VotePost(postid int, upvote bool, amount uint) error {
+	up := 0
+	if upvote {
+		up = 1
+	}
+	if res, err := c.client.Get("https://www.zapread.com/?l=1"); err == nil {
+		if body, err := ioutil.ReadAll(res.Body); err == nil {
+			token := extractRequestVerificationToken(string(body))
+			if req, err := http.NewRequest("POST", "https://www.zapread.com/Vote/Post", bytes.NewBufferString(fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount))); err == nil {
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("__RequestVerificationToken", token)
+				res, err := c.client.Do(req)
+				if err == nil {
+					defer res.Body.Close()
+					if body, err := ioutil.ReadAll(res.Body); err == nil {
+						if strings.Contains(string(body), `"success":true`) {
+							return nil
+						}
+					}
+				}
+			}
+		}
+	}
+	return errors.New("VotePost failed")
+
 }
