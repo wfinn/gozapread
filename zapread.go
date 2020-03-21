@@ -182,3 +182,80 @@ func (c zapclient) GetNewToken() (string, error) {
 	}
 	return "", errors.New("GetNewToken failed")
 }
+
+func (c zapclient) GetDepositInvoice(amount uint) (string, error) {
+	jsonStr := fmt.Sprintf(`{"amount":"%d","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1}`, amount)
+	if req, err := http.NewRequest("POST", "https://www.zapread.com/Lightning/GetDepositInvoice/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+		req.Header.Set("Content-Type", "application/json")
+		res, err := c.client.Do(req)
+		if err == nil {
+			defer res.Body.Close()
+			if body, err := ioutil.ReadAll(res.Body); err == nil {
+				//TODO Parse Invoice
+				return string(body), nil
+			}
+		}
+
+	}
+	return "", errors.New("GetDepositInvoice failed")
+}
+
+func (c zapclient) TipUser(userid, amount uint) error {
+	jsonStr := fmt.Sprintf(`{"id":%d,"amount":%d,"tx":null}`, userid, amount)
+	if req, err := http.NewRequest("POST", "https://www.zapread.com/Manage/TipUser", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+		req.Header.Set("Content-Type", "application/json")
+		res, err := c.client.Do(req)
+		if err == nil {
+			defer res.Body.Close()
+			if body, err := ioutil.ReadAll(res.Body); err == nil {
+				if string(body) == `{"Result":"Success"}` {
+					return nil
+				}
+			}
+		}
+	}
+	return errors.New("TipUser failed")
+}
+
+func (c zapclient) JoinGroup(groupid uint) error {
+	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
+
+	if token, err := c.GetNewToken(); err == nil {
+		if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/JoinGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("__RequestVerificationToken", token)
+			res, err := c.client.Do(req)
+			if err == nil {
+				defer res.Body.Close()
+				if body, err := ioutil.ReadAll(res.Body); err == nil {
+					if string(body) == `{"success":true}` {
+						return nil
+					}
+				}
+			}
+		}
+	}
+	return errors.New("JoinGroup failed")
+}
+
+func (c zapclient) LeaveGroup(groupid uint) error {
+        jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
+
+        if token, err := c.GetNewToken(); err == nil {
+                if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/LeaveGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+                        req.Header.Set("Content-Type", "application/json")
+                        req.Header.Set("__RequestVerificationToken", token)
+                        res, err := c.client.Do(req)
+                        if err == nil {
+                                defer res.Body.Close()
+                                if body, err := ioutil.ReadAll(res.Body); err == nil {
+                                        if string(body) == `{"success":true}` {
+                                                return nil
+                                        }
+                                }
+                        }
+                }
+        }
+        return errors.New("LeaveGroup failed")
+}
+
