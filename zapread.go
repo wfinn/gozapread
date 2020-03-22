@@ -66,16 +66,10 @@ func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
 
 func (c zapclient) GetMessageTable() (MessageTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	req, err := http.NewRequest("POST", c.url+"Messages/GetMessagesTable", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
-	res, err := c.client.Do(req)
-	if err == nil {
-		defer res.Body.Close()
-		if body, err := ioutil.ReadAll(res.Body); err == nil {
-			var messages MessageTable
-			if json.Unmarshal(body, &messages) == nil {
-				return messages, nil
-			}
+	if resp, err := c.postJson("Messages/GetMessagesTable", jsonStr, false); err == nil {
+		var messages MessageTable
+		if json.Unmarshal(resp, &messages) == nil {
+			return messages, nil
 		}
 	}
 	return *new(MessageTable), errors.New("GetMessageTable failed")
@@ -83,22 +77,12 @@ func (c zapclient) GetMessageTable() (MessageTable, error) {
 
 func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp, error) {
 	post := Post{PostID: 0, Content: content, GroupID: groupid, UserID: false, Title: title, IsDraft: false, Language: "en"}
-	if j, err := json.Marshal(post); err == nil {
-		if token, err := c.GetNewToken(); err == nil {
-			if req, err := http.NewRequest("POST", c.url+"Post/SubmitNewPost/", bytes.NewBuffer(j)); err == nil {
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("__RequestVerificationToken", token)
-				res, err := c.client.Do(req)
-				if err == nil {
-					defer res.Body.Close()
-					if body, err := ioutil.ReadAll(res.Body); err == nil {
-						var resp PostResp
-						if json.Unmarshal(body, &resp) == nil {
-							if resp.Success {
-								return resp, nil
-							}
-						}
-					}
+	if jsonSlc, err := json.Marshal(post); err == nil {
+		if resp, err := c.postJson("Post/SubmitNewPost/", string(jsonSlc), true); err == nil {
+			var postResp PostResp
+			if json.Unmarshal(resp, &postResp) == nil {
+				if postResp.Success {
+					return postResp, nil
 				}
 			}
 		}
@@ -108,38 +92,20 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp,
 
 func (c zapclient) DismissMessage(id uint) error { // should be int -1 means dismiss all
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
-	if req, err := http.NewRequest("POST", c.url+"Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-		req.Header.Set("Content-Type", "application/json")
-		res, err := c.client.Do(req)
-		if err == nil {
-			defer res.Body.Close()
-			if body, err := ioutil.ReadAll(res.Body); err == nil {
-				if string(body) == `{"Result":"Success"}` {
+	if resp, err := c.postJson("Messages/DismissMessage", jsonStr, false); err == nil {
+				if string(resp) == `{"Result":"Success"}` {
 					return nil
 				}
-			}
-		}
-
 	}
 	return errors.New("DismissMessage failed")
 }
 
 func (c zapclient) AddComment(content string, postid, commentid uint) error {
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
-	if j, err := json.Marshal(comment); err == nil {
-		if token, err := c.GetNewToken(); err == nil {
-			if req, err := http.NewRequest("POST", c.url+"Comment/AddComment", bytes.NewBuffer(j)); err == nil {
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("__RequestVerificationToken", token)
-				res, err := c.client.Do(req)
-				if err == nil {
-					defer res.Body.Close()
-					if body, err := ioutil.ReadAll(res.Body); err == nil {
-						if strings.Contains(string(body), `"success":true`) {
-							return nil
-						}
-					}
-				}
+	if jsonSlc, err := json.Marshal(comment); err == nil {
+		if resp, err := c.postJson("Comment/AddComment", string(jsonSlc), true); err == nil {
+			if strings.Contains(string(resp), `"success":true`) {
+				return nil
 			}
 		}
 	}
@@ -151,19 +117,10 @@ func (c zapclient) VotePost(postid int, upvote bool, amount uint) error {
 	if upvote {
 		up = 1
 	}
-	if token, err := c.GetNewToken(); err == nil {
-		if req, err := http.NewRequest("POST", c.url+"Vote/Post", bytes.NewBufferString(fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount))); err == nil {
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("__RequestVerificationToken", token)
-			res, err := c.client.Do(req)
-			if err == nil {
-				defer res.Body.Close()
-				if body, err := ioutil.ReadAll(res.Body); err == nil {
-					if strings.Contains(string(body), `"success":true`) {
-						return nil
-					}
-				}
-			}
+	jsonStr := fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount)
+	if resp, err := c.postJson("Vote/Post", jsonStr, true); err == nil {
+		if strings.Contains(string(resp), `"success":true`) {
+			return nil
 		}
 	}
 	return errors.New("VotePost failed")
@@ -186,16 +143,9 @@ func (c zapclient) GetNewToken() (string, error) {
 
 func (c zapclient) GetDepositInvoice(amount uint) (string, error) {
 	jsonStr := fmt.Sprintf(`{"amount":"%d","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1}`, amount)
-	if req, err := http.NewRequest("POST", c.url+"Lightning/GetDepositInvoice/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-		req.Header.Set("Content-Type", "application/json")
-		res, err := c.client.Do(req)
-		if err == nil {
-			defer res.Body.Close()
-			if body, err := ioutil.ReadAll(res.Body); err == nil {
-				//TODO Parse Invoice
-				return string(body), nil
-			}
-		}
+	if resp, err := c.postJson("Lightning/GetDepositInvoice/", jsonStr, false); err == nil {
+		//TODO Parse Invoice
+		return string(resp), nil
 
 	}
 	return "", errors.New("GetDepositInvoice failed")
