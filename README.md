@@ -28,6 +28,8 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 - **UnreadMessages() uint** /Messages/UnreadMessages/
 - **GetMessageTable()** /Messages/GetMessagesTable Unmarshal the json to a MessageTable
 - **DismissMessage(id uint)** /Messages/DismissMessage (should be int -1 means dismiss all)
+- **GetAlertsTable() (AlertsTable, error)** /Messages/GetMessagesTable
+- **DismissAlert(id uint)** /Messages/DismissAlert (should be int -1 means dismiss all)
 - **GetGroupId(postId uint) uint**
 - **SubmitNewPost(title, body string, group uint) bool** /Post/SubmitNewPost/
 - **AddComment** /Comment/AddComment

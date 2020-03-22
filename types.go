@@ -44,3 +44,20 @@ type Comment struct {
 type BalanceResp struct {
 	Balance uint `json:"balance"`
 }
+
+type AlertsTable struct {
+	Draw            uint `json:"draw"`
+	RecordsTotal    uint `json:"recordsTotal"`
+	RecordsFiltered uint `json:"recordsFiltered"`
+	Data            []struct {
+		AlertID        uint   `json:"AlertId"`
+		Status         string `json:"Status"`
+		Title          string `json:"Title"`
+		Date           string `json:"Date"`
+		Link           string `json:"Link"`
+		Anchor         string `json:"Anchor"`
+		Message        string `json:"Message"`
+		HasCommentLink bool   `json:"HasCommentLink"`
+		HasLink        bool   `json:"HasLink"`
+	} `json:"data"`
+}

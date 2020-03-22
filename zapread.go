@@ -77,7 +77,7 @@ func (c zapclient) GetMessageTable() (MessageTable, error) {
 			}
 		}
 	}
-	return *new(MessageTable), errors.New("Blah")
+	return *new(MessageTable), errors.New("GetMessageTable failed")
 }
 
 func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp, error) {
@@ -267,9 +267,42 @@ func (c zapclient) UserBalance() (uint, error) {
 			if json.Unmarshal(body, &resp) == nil {
 				return resp.Balance, nil
 			}
-
 		}
 
 	}
 	return 0, errors.New("GetUserBalance failed")
+}
+func (c zapclient) GetAlertsTable() (AlertsTable, error) {
+	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Title","name":"Title","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
+	req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/GetAlertsTable", bytes.NewBuffer([]byte(jsonStr)))
+	req.Header.Set("Content-Type", "application/json")
+	res, err := c.client.Do(req)
+	if err == nil {
+		defer res.Body.Close()
+		if body, err := ioutil.ReadAll(res.Body); err == nil {
+			var alerts AlertsTable
+			if json.Unmarshal(body, &alerts) == nil {
+				return alerts, nil
+			}
+		}
+	}
+	return *new(AlertsTable), errors.New("GetAlertsTable failed")
+}
+
+func (c zapclient) DismissAlert(id uint) error {
+	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
+	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissAlert", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+		req.Header.Set("Content-Type", "application/json")
+		res, err := c.client.Do(req)
+		if err == nil {
+			defer res.Body.Close()
+			if body, err := ioutil.ReadAll(res.Body); err == nil {
+				if string(body) == `{"Result":"Success"}` {
+					return nil
+				}
+			}
+		}
+
+	}
+	return errors.New("DismissAlert failed")
 }
