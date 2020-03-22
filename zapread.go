@@ -17,6 +17,7 @@ import (
 
 type zapclient struct {
 	client http.Client
+	url    string
 }
 
 func Login(user, pass string) (zapclient, error) {
@@ -25,10 +26,10 @@ func Login(user, pass string) (zapclient, error) {
 		Jar:     cookieJar,
 		Timeout: 30 * time.Second,
 	}
-	c := zapclient{client}
+	c := zapclient{client: client, url: "https://www.zapread.com/"}
 	if token, err := c.GetNewToken(); err == nil {
 		logindetails := url.Values{"__RequestVerificationToken": {token}, "UserName": {user}, "Password": {pass}, "RememberMe": {"false"}}
-		if res, err := client.PostForm("https://www.zapread.com/Account/Login/", logindetails); err == nil {
+		if res, err := client.PostForm(c.url+"Account/Login/", logindetails); err == nil {
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
 				if strings.Contains(string(body), "/Account/LogOff/") { //TODO better validation?
 					return c, nil
@@ -39,8 +40,8 @@ func Login(user, pass string) (zapclient, error) {
 	return zapclient{}, errors.New("Login failed")
 }
 
-func (c zapclient) GetGroupId(postid uint) (result uint) {
-	if res, err := c.client.Get(fmt.Sprintf(`https://www.zapread.com/Post/Detail/%d`, postid)); err == nil {
+func (c zapclient) GetGroupId(postid uint) (result uint) { // return an error
+	if res, err := c.client.Get(fmt.Sprintf(c.url+`Post/Detail/%d`, postid)); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`data-groupid=\"[^\"]*`)
 			if re.MatchString(string(body)) {
@@ -55,7 +56,7 @@ func (c zapclient) GetGroupId(postid uint) (result uint) {
 }
 
 func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
-	if res, err := c.client.Get("https://www.zapread.com/Messages/UnreadMessages/"); err == nil {
+	if res, err := c.client.Get(c.url + "Messages/UnreadMessages/"); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			return !(string(body) == "0")
 		}
@@ -65,7 +66,7 @@ func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
 
 func (c zapclient) GetMessageTable() (MessageTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/GetMessagesTable", bytes.NewBuffer([]byte(jsonStr)))
+	req, err := http.NewRequest("POST", c.url+"Messages/GetMessagesTable", bytes.NewBuffer([]byte(jsonStr)))
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.client.Do(req)
 	if err == nil {
@@ -84,7 +85,7 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp,
 	post := Post{PostID: 0, Content: content, GroupID: groupid, UserID: false, Title: title, IsDraft: false, Language: "en"}
 	if j, err := json.Marshal(post); err == nil {
 		if token, err := c.GetNewToken(); err == nil {
-			if req, err := http.NewRequest("POST", "https://www.zapread.com/Post/SubmitNewPost/", bytes.NewBuffer(j)); err == nil {
+			if req, err := http.NewRequest("POST", c.url+"Post/SubmitNewPost/", bytes.NewBuffer(j)); err == nil {
 				req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("__RequestVerificationToken", token)
 				res, err := c.client.Do(req)
@@ -105,9 +106,9 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp,
 	return *new(PostResp), errors.New("SubmitNewPost failed")
 }
 
-func (c zapclient) DismissMessage(id uint) error {
+func (c zapclient) DismissMessage(id uint) error { // should be int -1 means dismiss all
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
-	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+	if req, err := http.NewRequest("POST", c.url+"Messages/DismissMessage", bytes.NewBuffer([]byte(jsonStr))); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 		res, err := c.client.Do(req)
 		if err == nil {
@@ -127,7 +128,7 @@ func (c zapclient) AddComment(content string, postid, commentid uint) error {
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
 	if j, err := json.Marshal(comment); err == nil {
 		if token, err := c.GetNewToken(); err == nil {
-			if req, err := http.NewRequest("POST", "https://www.zapread.com/Comment/AddComment", bytes.NewBuffer(j)); err == nil {
+			if req, err := http.NewRequest("POST", c.url+"Comment/AddComment", bytes.NewBuffer(j)); err == nil {
 				req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("__RequestVerificationToken", token)
 				res, err := c.client.Do(req)
@@ -151,7 +152,7 @@ func (c zapclient) VotePost(postid int, upvote bool, amount uint) error {
 		up = 1
 	}
 	if token, err := c.GetNewToken(); err == nil {
-		if req, err := http.NewRequest("POST", "https://www.zapread.com/Vote/Post", bytes.NewBufferString(fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount))); err == nil {
+		if req, err := http.NewRequest("POST", c.url+"Vote/Post", bytes.NewBufferString(fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount))); err == nil {
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("__RequestVerificationToken", token)
 			res, err := c.client.Do(req)
@@ -170,7 +171,7 @@ func (c zapclient) VotePost(postid int, upvote bool, amount uint) error {
 }
 
 func (c zapclient) GetNewToken() (string, error) {
-	if res, err := c.client.Get("https://www.zapread.com"); err == nil {
+	if res, err := c.client.Get(c.url); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`<input name="__RequestVerificationToken" type="hidden" value="[^"]+`)
 			if re.MatchString(string(body)) {
@@ -185,7 +186,7 @@ func (c zapclient) GetNewToken() (string, error) {
 
 func (c zapclient) GetDepositInvoice(amount uint) (string, error) {
 	jsonStr := fmt.Sprintf(`{"amount":"%d","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1}`, amount)
-	if req, err := http.NewRequest("POST", "https://www.zapread.com/Lightning/GetDepositInvoice/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
+	if req, err := http.NewRequest("POST", c.url+"Lightning/GetDepositInvoice/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 		res, err := c.client.Do(req)
 		if err == nil {
@@ -202,16 +203,9 @@ func (c zapclient) GetDepositInvoice(amount uint) (string, error) {
 
 func (c zapclient) TipUser(userid, amount uint) error {
 	jsonStr := fmt.Sprintf(`{"id":%d,"amount":%d,"tx":null}`, userid, amount)
-	if req, err := http.NewRequest("POST", "https://www.zapread.com/Manage/TipUser", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-		req.Header.Set("Content-Type", "application/json")
-		res, err := c.client.Do(req)
-		if err == nil {
-			defer res.Body.Close()
-			if body, err := ioutil.ReadAll(res.Body); err == nil {
-				if string(body) == `{"Result":"Success"}` {
-					return nil
-				}
-			}
+	if resp, err := c.postJson("Manage/TipUser", jsonStr, false); err == nil {
+		if string(resp) == `{"Result":"Success"}` {
+			return nil
 		}
 	}
 	return errors.New("TipUser failed")
@@ -219,20 +213,9 @@ func (c zapclient) TipUser(userid, amount uint) error {
 
 func (c zapclient) JoinGroup(groupid uint) error {
 	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
-
-	if token, err := c.GetNewToken(); err == nil {
-		if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/JoinGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("__RequestVerificationToken", token)
-			res, err := c.client.Do(req)
-			if err == nil {
-				defer res.Body.Close()
-				if body, err := ioutil.ReadAll(res.Body); err == nil {
-					if string(body) == `{"success":true}` {
-						return nil
-					}
-				}
-			}
+	if resp, err := c.postJson("Group/JoinGroup/", jsonStr, true); err == nil {
+		if string(resp) == `{"success":true}` {
+			return nil
 		}
 	}
 	return errors.New("JoinGroup failed")
@@ -240,27 +223,16 @@ func (c zapclient) JoinGroup(groupid uint) error {
 
 func (c zapclient) LeaveGroup(groupid uint) error {
 	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
-
-	if token, err := c.GetNewToken(); err == nil {
-		if req, err := http.NewRequest("POST", "https://www.zapread.com/Group/LeaveGroup/", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("__RequestVerificationToken", token)
-			res, err := c.client.Do(req)
-			if err == nil {
-				defer res.Body.Close()
-				if body, err := ioutil.ReadAll(res.Body); err == nil {
-					if string(body) == `{"success":true}` {
-						return nil
-					}
-				}
-			}
+	if resp, err := c.postJson("Group/LeaveGroup/", jsonStr, true); err != nil {
+		if string(resp) == `{"success":true}` {
+			return nil
 		}
 	}
 	return errors.New("LeaveGroup failed")
 }
 
 func (c zapclient) UserBalance() (uint, error) {
-	if resp, err := c.client.Get("https://www.zapread.com/Account/UserBalance"); err == nil {
+	if resp, err := c.client.Get(c.url + "Account/UserBalance"); err == nil {
 		defer resp.Body.Close()
 		if body, err := ioutil.ReadAll(resp.Body); err == nil {
 			var resp BalanceResp
@@ -274,35 +246,40 @@ func (c zapclient) UserBalance() (uint, error) {
 }
 func (c zapclient) GetAlertsTable() (AlertsTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Title","name":"Title","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/GetAlertsTable", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
-	res, err := c.client.Do(req)
-	if err == nil {
-		defer res.Body.Close()
-		if body, err := ioutil.ReadAll(res.Body); err == nil {
-			var alerts AlertsTable
-			if json.Unmarshal(body, &alerts) == nil {
-				return alerts, nil
-			}
+	if resp, err := c.postJson("Messages/GetAlertsTable", jsonStr, false); err == nil {
+		var alerts AlertsTable
+		if json.Unmarshal(resp, &alerts) == nil {
+			return alerts, nil
 		}
 	}
 	return *new(AlertsTable), errors.New("GetAlertsTable failed")
 }
 
-func (c zapclient) DismissAlert(id uint) error {
+func (c zapclient) DismissAlert(id uint) error { // should be int -1 means dismiss all
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
-	if req, err := http.NewRequest("POST", "https://www.zapread.com/Messages/DismissAlert", bytes.NewBuffer([]byte(jsonStr))); err == nil {
-		req.Header.Set("Content-Type", "application/json")
-		res, err := c.client.Do(req)
-		if err == nil {
-			defer res.Body.Close()
-			if body, err := ioutil.ReadAll(res.Body); err == nil {
-				if string(body) == `{"Result":"Success"}` {
-					return nil
-				}
-			}
+	if resp, err := c.postJson("Messages/DismissAlert", jsonStr, false); err == nil {
+		if string(resp) == `{"Result":"Success"}` {
+			return nil
 		}
 
 	}
 	return errors.New("DismissAlert failed")
+}
+
+func (c zapclient) postJson(url, jsonStr string, withcsrftoken bool) ([]byte, error) {
+	if req, err := http.NewRequest(http.MethodPost, c.url+url, bytes.NewBuffer([]byte(jsonStr))); err == nil {
+		req.Header.Set("Content-Type", "application/json")
+		if withcsrftoken {
+			token, err := c.GetNewToken()
+			if err != nil {
+				return nil, err
+			}
+			req.Header.Set("__RequestVerificationToken", token)
+		}
+		if resp, err := c.client.Do(req); err == nil {
+			defer resp.Body.Close()
+			return ioutil.ReadAll(resp.Body)
+		}
+	}
+	return nil, errors.New("HttpPost failed")
 }

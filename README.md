@@ -24,20 +24,22 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 }
 ```
 ### Functions
-- **Login(user, pass string) error** prepares client
-- **UnreadMessages() uint** /Messages/UnreadMessages/
-- **GetMessageTable()** /Messages/GetMessagesTable Unmarshal the json to a MessageTable
-- **DismissMessage(id uint)** /Messages/DismissMessage (should be int -1 means dismiss all)
-- **GetAlertsTable() (AlertsTable, error)** /Messages/GetMessagesTable
-- **DismissAlert(id uint)** /Messages/DismissAlert (should be int -1 means dismiss all)
-- **GetGroupId(postId uint) uint**
-- **SubmitNewPost(title, body string, group uint) bool** /Post/SubmitNewPost/
-- **AddComment** /Comment/AddComment
-- **GetNewToken(path string) (string, error)**
-- **TipUser(userid, amount uint) error** /Manage/TipUser/
-- **JoinGroup(groupid uint) error** /Group/JoinGroup/
-- **LeaveGroup(groupid uint) error** /Group/LeaveGroup/
-- **UserBalance() (uint, error)** /Account/UserBalance/
+- **Login(user, pass string) (zapclient, error)** prepares client
+- **AddComment(content string, postid, commentid uint) error**
+- **DismissAlert(id uint) error** // should be int -1 means dismiss all
+- **DismissMessage(id uint) error** // should be int -1 means dismiss all
+- **GetAlertsTable() (AlertsTable, error)**
+- **GetGroupId(postid uint) (result uint)** // return an error
+- **GetMessageTable() (MessageTable, error)**
+- **GetNewToken() (string, error)**
+- **JoinGroup(groupid uint) error**
+- **LeaveGroup(groupid uint) error**
+- **SubmitNewPost(title, content string, groupid uint) (PostResp, error)**
+- **TipUser(userid, amount uint) error**
+- **UnreadMessages() bool** //TODO return the uint instead
+- **UserBalance() (uint, error)**
+- **VotePost(postid int, upvote bool, amount uint) error**
+
 #### Not Implemented
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
 - /Messages/SendMessage/
