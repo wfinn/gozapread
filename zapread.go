@@ -232,3 +232,22 @@ func (c zapclient) postJSON(url, jsonStr string, withcsrftoken bool) ([]byte, er
 	}
 	return nil, errors.New("postJSON failed")
 }
+
+func (c zapclient) GetUnreadMessages() (UnreadMessages, error) {
+	if req, err := http.NewRequest(http.MethodGet, c.url+"Messages/Unread?include_content=true&include_alerts=true", nil); err == nil {
+		if token, err := c.GetNewToken(); err == nil {
+			req.Header.Set("__RequestVerificationToken", token)
+			if resp, err := c.client.Do(req); err == nil {
+				defer resp.Body.Close()
+				if body, err := ioutil.ReadAll(resp.Body); err == nil {
+					var unread UnreadMessages
+					if json.Unmarshal(body, &unread) == nil {
+						return unread, nil
+					}
+				}
+			}
+		}
+
+	}
+	return *new(UnreadMessages), errors.New("UnreadMessages failed")
+}

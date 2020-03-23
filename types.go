@@ -61,3 +61,17 @@ type AlertsTable struct {
 		HasLink        bool   `json:"HasLink"`
 	} `json:"data"`
 }
+
+type UnreadMessages struct {
+	Success  bool `json:"success"`
+	Messages []struct {
+		MessageID        int    `json:"MessageId"`
+		FromID           int    `json:"FromId"`
+		FromName         string `json:"FromName"`
+		ToID             int    `json:"ToId"`
+		ToName           string `json:"ToName"`
+		IsPrivateMessage bool   `json:"IsPrivateMessage"`
+		TimeStamp        string `json:"TimeStamp"`
+		Content          string `json:"Content"`
+	} `json:"messages"`
+}
