@@ -66,7 +66,7 @@ func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
 
 func (c zapclient) GetMessageTable() (MessageTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	if resp, err := c.postJson("Messages/GetMessagesTable", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Messages/GetMessagesTable", jsonStr, false); err == nil {
 		var messages MessageTable
 		if json.Unmarshal(resp, &messages) == nil {
 			return messages, nil
@@ -78,7 +78,7 @@ func (c zapclient) GetMessageTable() (MessageTable, error) {
 func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp, error) {
 	post := Post{PostID: 0, Content: content, GroupID: groupid, UserID: false, Title: title, IsDraft: false, Language: "en"}
 	if jsonSlc, err := json.Marshal(post); err == nil {
-		if resp, err := c.postJson("Post/SubmitNewPost/", string(jsonSlc), true); err == nil {
+		if resp, err := c.postJSON("Post/SubmitNewPost/", string(jsonSlc), true); err == nil {
 			var postResp PostResp
 			if json.Unmarshal(resp, &postResp) == nil {
 				if postResp.Success {
@@ -92,10 +92,10 @@ func (c zapclient) SubmitNewPost(title, content string, groupid uint) (PostResp,
 
 func (c zapclient) DismissMessage(id uint) error { // should be int -1 means dismiss all
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
-	if resp, err := c.postJson("Messages/DismissMessage", jsonStr, false); err == nil {
-				if string(resp) == `{"Result":"Success"}` {
-					return nil
-				}
+	if resp, err := c.postJSON("Messages/DismissMessage", jsonStr, false); err == nil {
+		if string(resp) == `{"Result":"Success"}` {
+			return nil
+		}
 	}
 	return errors.New("DismissMessage failed")
 }
@@ -103,7 +103,7 @@ func (c zapclient) DismissMessage(id uint) error { // should be int -1 means dis
 func (c zapclient) AddComment(content string, postid, commentid uint) error {
 	comment := Comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
 	if jsonSlc, err := json.Marshal(comment); err == nil {
-		if resp, err := c.postJson("Comment/AddComment", string(jsonSlc), true); err == nil {
+		if resp, err := c.postJSON("Comment/AddComment", string(jsonSlc), true); err == nil {
 			if strings.Contains(string(resp), `"success":true`) {
 				return nil
 			}
@@ -118,7 +118,7 @@ func (c zapclient) VotePost(postid int, upvote bool, amount uint) error {
 		up = 1
 	}
 	jsonStr := fmt.Sprintf(`{"Id":%d,"d":%d,"a":%d,"tx":0}`, postid, up, amount)
-	if resp, err := c.postJson("Vote/Post", jsonStr, true); err == nil {
+	if resp, err := c.postJSON("Vote/Post", jsonStr, true); err == nil {
 		if strings.Contains(string(resp), `"success":true`) {
 			return nil
 		}
@@ -143,17 +143,16 @@ func (c zapclient) GetNewToken() (string, error) {
 
 func (c zapclient) GetDepositInvoice(amount uint) (string, error) {
 	jsonStr := fmt.Sprintf(`{"amount":"%d","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1}`, amount)
-	if resp, err := c.postJson("Lightning/GetDepositInvoice/", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Lightning/GetDepositInvoice/", jsonStr, false); err == nil {
 		//TODO Parse Invoice
 		return string(resp), nil
-
 	}
 	return "", errors.New("GetDepositInvoice failed")
 }
 
 func (c zapclient) TipUser(userid, amount uint) error {
 	jsonStr := fmt.Sprintf(`{"id":%d,"amount":%d,"tx":null}`, userid, amount)
-	if resp, err := c.postJson("Manage/TipUser", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Manage/TipUser", jsonStr, false); err == nil {
 		if string(resp) == `{"Result":"Success"}` {
 			return nil
 		}
@@ -163,7 +162,7 @@ func (c zapclient) TipUser(userid, amount uint) error {
 
 func (c zapclient) JoinGroup(groupid uint) error {
 	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
-	if resp, err := c.postJson("Group/JoinGroup/", jsonStr, true); err == nil {
+	if resp, err := c.postJSON("Group/JoinGroup/", jsonStr, true); err == nil {
 		if string(resp) == `{"success":true}` {
 			return nil
 		}
@@ -173,7 +172,7 @@ func (c zapclient) JoinGroup(groupid uint) error {
 
 func (c zapclient) LeaveGroup(groupid uint) error {
 	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
-	if resp, err := c.postJson("Group/LeaveGroup/", jsonStr, true); err != nil {
+	if resp, err := c.postJSON("Group/LeaveGroup/", jsonStr, true); err != nil {
 		if string(resp) == `{"success":true}` {
 			return nil
 		}
@@ -192,11 +191,11 @@ func (c zapclient) UserBalance() (uint, error) {
 		}
 
 	}
-	return 0, errors.New("GetUserBalance failed")
+	return 0, errors.New("UserBalance failed")
 }
 func (c zapclient) GetAlertsTable() (AlertsTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Title","name":"Title","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	if resp, err := c.postJson("Messages/GetAlertsTable", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Messages/GetAlertsTable", jsonStr, false); err == nil {
 		var alerts AlertsTable
 		if json.Unmarshal(resp, &alerts) == nil {
 			return alerts, nil
@@ -207,7 +206,7 @@ func (c zapclient) GetAlertsTable() (AlertsTable, error) {
 
 func (c zapclient) DismissAlert(id uint) error { // should be int -1 means dismiss all
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
-	if resp, err := c.postJson("Messages/DismissAlert", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Messages/DismissAlert", jsonStr, false); err == nil {
 		if string(resp) == `{"Result":"Success"}` {
 			return nil
 		}
@@ -216,7 +215,7 @@ func (c zapclient) DismissAlert(id uint) error { // should be int -1 means dismi
 	return errors.New("DismissAlert failed")
 }
 
-func (c zapclient) postJson(url, jsonStr string, withcsrftoken bool) ([]byte, error) {
+func (c zapclient) postJSON(url, jsonStr string, withcsrftoken bool) ([]byte, error) {
 	if req, err := http.NewRequest(http.MethodPost, c.url+url, bytes.NewBuffer([]byte(jsonStr))); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 		if withcsrftoken {
@@ -231,5 +230,5 @@ func (c zapclient) postJson(url, jsonStr string, withcsrftoken bool) ([]byte, er
 			return ioutil.ReadAll(resp.Body)
 		}
 	}
-	return nil, errors.New("HttpPost failed")
+	return nil, errors.New("postJSON failed")
 }
