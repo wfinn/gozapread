@@ -66,7 +66,7 @@ func (c zapclient) UnreadMessages() bool { //TODO return the uint instead
 
 func (c zapclient) GetMessageTable() (MessageTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":null,"name":"From","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Message","name":"Message","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	if resp, err := c.postJSON("Messages/GetMessagesTable", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Messages/GetMessagesTable", jsonStr, true); err == nil {
 		var messages MessageTable
 		if json.Unmarshal(resp, &messages) == nil {
 			return messages, nil
@@ -195,7 +195,7 @@ func (c zapclient) UserBalance() (uint, error) {
 }
 func (c zapclient) GetAlertsTable() (AlertsTable, error) {
 	jsonStr := `{"draw":1,"columns":[{"data":null,"name":"Status","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Date","name":"Date","searchable":true,"orderable":true,"search":{"value":"","regex":false}},{"data":"Title","name":"Title","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Link","searchable":true,"orderable":false,"search":{"value":"","regex":false}},{"data":null,"name":"Action","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[{"column":1,"dir":"desc"}],"start":0,"length":25,"search":{"value":"","regex":false}}`
-	if resp, err := c.postJSON("Messages/GetAlertsTable", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Messages/GetAlertsTable", jsonStr, true); err == nil {
 		var alerts AlertsTable
 		if json.Unmarshal(resp, &alerts) == nil {
 			return alerts, nil
