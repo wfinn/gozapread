@@ -286,3 +286,20 @@ func (c *ZapClient) GetUnreadMessages() (UnreadMessages, error) {
 	}
 	return *new(UnreadMessages), errors.New("UnreadMessages failed")
 }
+
+// Parses tips from unread alerts. Hint: DismissAlert(Tip.AlertID)
+func ParseTips(alerts AlertsTable) []Tip {
+	var tips []Tip
+	for _, alert := range alerts.Data {
+		if alert.Status == "Unread" && alert.Title == "You received a tip!" {
+			split := strings.Split(strings.Split(alert.Message, "/'>")[1], "</a><br/> Amount: ")
+			user := split[0]
+			amountStr := strings.Split(split[1], " Satoshi.")[0]
+			if amount, err := strconv.ParseUint(amountStr, 10, 32); err == nil {
+				tips = append(tips, Tip{From: user, Amount: uint(amount), AlertID: alert.AlertID})
+			}
+
+		}
+	}
+	return tips
+}

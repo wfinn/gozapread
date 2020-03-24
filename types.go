@@ -92,3 +92,9 @@ type PaymentReq struct {
 	NumSatoshis string `json:"num_satoshis"`
 	Destination string `json:"destination"`
 }
+
+type Tip struct {
+	From    string
+	Amount  uint
+	AlertID uint
+}
