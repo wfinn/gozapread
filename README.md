@@ -1,5 +1,5 @@
 # gozapread
-Go [https://zapread.com](https://zapread.com) Api Implementation
+[https://zapread.com](https://zapread.com)
 
 ## Why?
 I had an idea for a zapread bot and therefore needed this.
@@ -37,7 +37,4 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 - /Messages/SendMessage/
 - /Vote/Comment like /Vote/Post
 - /Home/TopPosts
-- /Lightning/GetDepositInvoice/ {"amount":"1","memo":"ZapRead.com deposit","anon":"0","use":"userDeposit","useId":-1,"useAction":-1} {"Invoice":"blah","Result":"success","Id":123456}
-- /Lightning/ValidatePaymentRequest {"request":"blah"} {"success":true,"num_satoshis":"1","destination":"blah"}
-- /Lightning/SubmitPaymentRequest {"request":"blah"}
 - /Manage/UpdateAboutMe/ __RequestVerificationToken=abc&AboutMe=text

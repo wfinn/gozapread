@@ -65,13 +65,30 @@ type AlertsTable struct {
 type UnreadMessages struct {
 	Success  bool `json:"success"`
 	Messages []struct {
-		MessageID        int    `json:"MessageId"`
-		FromID           int    `json:"FromId"`
+		MessageID        uint   `json:"MessageId"`
+		FromID           uint   `json:"FromId"`
 		FromName         string `json:"FromName"`
-		ToID             int    `json:"ToId"`
+		ToID             uint   `json:"ToId"`
 		ToName           string `json:"ToName"`
 		IsPrivateMessage bool   `json:"IsPrivateMessage"`
 		TimeStamp        string `json:"TimeStamp"`
 		Content          string `json:"Content"`
 	} `json:"messages"`
+}
+
+type Invoice struct {
+	Invoice string `json:"Invoice"`
+	Result  string `json:"Result"`
+	ID      uint   `json:"Id"`
+}
+
+type PaymentResp struct {
+	Result string `json:"Result"`
+	Fees   uint   `json:"Fees"`
+}
+
+type PaymentReq struct {
+	Success     bool   `json:"success"`
+	NumSatoshis string `json:"num_satoshis"`
+	Destination string `json:"destination"`
 }
