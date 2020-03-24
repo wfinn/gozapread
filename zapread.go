@@ -144,6 +144,7 @@ func (c *ZapClient) GetNewToken() (string, error) {
 			return "", errors.New("GetNewToken No token found")
 		}
 	}
+	return "", errors.New("GetNewToken failed")
 }
 
 func (c *ZapClient) GetDepositInvoice(amount uint) (string, error) {
