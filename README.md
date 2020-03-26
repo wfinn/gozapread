@@ -34,7 +34,6 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 
 ## Next endpoints, probably
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
-- /Messages/SendMessage/
 - /Vote/Comment like /Vote/Post
 - /Home/TopPosts
 - /Manage/UpdateAboutMe/ __RequestVerificationToken=abc&AboutMe=text

@@ -98,3 +98,9 @@ type Tip struct {
 	Amount  uint
 	AlertID uint
 }
+
+type ChatMessage struct {
+	ID      uint   `json:"id"`
+	Content string `json:"content"`
+	IsChat  bool   `json:"isChat"`
+}

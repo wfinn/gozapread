@@ -303,3 +303,16 @@ func ParseTips(alerts AlertsTable) []Tip {
 	}
 	return tips
 }
+
+//Sends a private message, doesn't return the ID yet, I didn't need it yet.
+func (c *ZapClient) SendMessage(message string, toID uint) error {
+	msg := ChatMessage{Content: message, ID: toID, IsChat: true}
+	if jsonSlc, err := json.Marshal(msg); err == nil {
+		if resp, err := c.postJSON("Messages/SendMessage", string(jsonSlc), true); err == nil {
+			if strings.HasPrefix(string(resp), `{"success":true,"result":"Success",`) {
+				return nil
+			}
+		}
+	}
+	return errors.New("AddComment failed")
+}
