@@ -42,7 +42,7 @@ type Comment struct {
 }
 
 type BalanceResp struct {
-	Balance uint `json:"balance"`
+	Balance string `json:"balance"`
 }
 
 type AlertsTable struct {
