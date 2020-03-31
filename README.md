@@ -1,5 +1,5 @@
 # gozapread
-A code base for [zapread.com](https://zapread.com) bots.  
+A code base for [zapread](https://github.com/Horndev/zapread.com) bots.  
 
 
 ## Why?
