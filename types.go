@@ -104,3 +104,8 @@ type ChatMessage struct {
 	Content string `json:"content"`
 	IsChat  bool   `json:"isChat"`
 }
+
+type UserHover struct {
+	UserID   uint   `json:"userId"`
+	Username string `json:"username"`
+}

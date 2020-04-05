@@ -318,3 +318,41 @@ func (c *ZapClient) SendMessage(message string, toID uint) error {
 	}
 	return errors.New("AddComment failed")
 }
+
+func (c *ZapClient) IsUserNameOnline(name string) (bool, error) {
+	user := UserHover{
+		UserID:   0,
+		Username: name,
+	}
+
+	if jsonSlc, err := json.Marshal(user); err == nil {
+		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
+			if strings.Contains(string(resp), "Online") {
+				return true, nil
+			} else if strings.Contains(string(resp), "Offline") {
+				return false, nil
+			}
+
+		}
+	}
+	return false, errors.New("IsUserNameOnline failed")
+}
+
+func (c *ZapClient) IsUserIdOnline(id uint) (bool, error) {
+	user := UserHover{
+		UserID:   id,
+		Username: "",
+	}
+
+	if jsonSlc, err := json.Marshal(user); err == nil {
+		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
+			if strings.Contains(string(resp), "Online") {
+				return true, nil
+			} else if strings.Contains(string(resp), "Offline") {
+				return false, nil
+			}
+
+		}
+	}
+	return false, errors.New("IsUserIdOnline failed")
+}
