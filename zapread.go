@@ -356,3 +356,21 @@ func (c *ZapClient) IsUserIdOnline(id uint) (bool, error) {
 	}
 	return false, errors.New("IsUserIdOnline failed")
 }
+
+func (c *ZapClient) CheckPayment(req string) (bool, error) {
+	invoice := InvoiceResp{
+		Invoice:   req,
+		IsDeposit: true,
+	}
+	if jsonSlc, err := json.Marshal(invoice); err == nil {
+		if resp, err := c.postJSON("Lightning/CheckPayment/", string(jsonSlc), false); err == nil {
+			var check PaymentCheck
+			if json.Unmarshal(resp, &check) == nil {
+				if check.Success {
+					return check.Result, nil
+				}
+			}
+		}
+	}
+	return false, errors.New("CheckPayment failed")
+}

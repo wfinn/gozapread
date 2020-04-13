@@ -109,3 +109,13 @@ type UserHover struct {
 	UserID   uint   `json:"userId"`
 	Username string `json:"username"`
 }
+
+type PaymentCheck struct {
+	Success bool `json:"success"`
+	Result  bool `json:"result"`
+}
+
+type InvoiceResp struct {
+	Invoice   string `json:"invoice"`
+	IsDeposit bool   `json:"isDeposit"`
+}
