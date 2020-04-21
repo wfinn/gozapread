@@ -189,7 +189,7 @@ func (c *ZapClient) ValidatePaymentRequest(request string) (uint, error) {
 
 func (c *ZapClient) TipUser(userid, amount uint) error {
 	jsonStr := fmt.Sprintf(`{"id":%d,"amount":%d,"tx":null}`, userid, amount)
-	if resp, err := c.postJSON("Manage/TipUser", jsonStr, false); err == nil {
+	if resp, err := c.postJSON("Manage/TipUser", jsonStr, true); err == nil {
 		if string(resp) == `{"Result":"Success"}` {
 			return nil
 		}
@@ -374,3 +374,25 @@ func (c *ZapClient) CheckPayment(req string) (bool, error) {
 	}
 	return false, errors.New("CheckPayment failed")
 }
+
+func (c *ZapClient) GetUserId(name string) (uint, error) {
+        user := UserHover{
+                UserID:   0,
+                Username: name,
+        }
+
+        if jsonSlc, err := json.Marshal(user); err == nil {
+                if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
+			re := regexp.MustCompile(`follow.[0-9]+`)
+                        if re.MatchString(string(resp)) {
+                                idstr := strings.Split(re.FindString(string(resp)), `follow(`)[1]
+				if uid, err := strconv.ParseUint(idstr, 10, 32); err == nil {
+					return uint(uid), nil
+				}
+                        }
+                        return 0, errors.New("GetUserId no userid found")
+                }
+        }
+        return 0, errors.New("GetUserId failed")
+}
+
