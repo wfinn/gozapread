@@ -190,7 +190,7 @@ func (c *ZapClient) ValidatePaymentRequest(request string) (uint, error) {
 func (c *ZapClient) TipUser(userid, amount uint) error {
 	jsonStr := fmt.Sprintf(`{"id":%d,"amount":%d,"tx":null}`, userid, amount)
 	if resp, err := c.postJSON("Manage/TipUser", jsonStr, true); err == nil {
-		if string(resp) == `{"Result":"Success"}` {
+		if string(resp) == `{"success":true,"Result":"Success"}` {
 			return nil
 		}
 	}
