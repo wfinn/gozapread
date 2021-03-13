@@ -30,7 +30,14 @@ if resp, err := api.SubmitNewPost("New Post", "Hi, I am a <b>bot</b>!", 199); er
 }
 ```
 With this simple setup you could create bots that report some statistics about Bitcoin for example. I'm sure that would earn you some satoshi.
-# Todo
+
+## Tests
+Before running `go test` you need to put the login details of a zapread account in testconfig.json.
+(Then run `git update-index --skip-worktree testconfig.json` to ignore the change.)
+
+Currently 1 satoshi is required in the test account, more requirements may follow with other tests.
+
+## Todo
 - refactor the hell out of this mess
 - provide more examples
 
