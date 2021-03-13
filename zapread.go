@@ -209,12 +209,15 @@ func (c *ZapClient) JoinGroup(groupid uint) error {
 
 func (c *ZapClient) LeaveGroup(groupid uint) error {
 	jsonStr := fmt.Sprintf(`{"gid":%d}`, groupid)
-	if resp, err := c.postJSON("Group/LeaveGroup/", jsonStr, true); err != nil {
+	if resp, err := c.postJSON("Group/LeaveGroup/", jsonStr, true); err == nil {
 		if string(resp) == `{"success":true}` {
 			return nil
+		} else {
+			return errors.New("LeaveGroup wasn't successful.")
 		}
+	} else {
+		return fmt.Errorf("LeaveGroup: %w", err)
 	}
-	return errors.New("LeaveGroup failed")
 }
 
 func (c *ZapClient) Balance() (uint, error) {
@@ -376,23 +379,22 @@ func (c *ZapClient) CheckPayment(req string) (bool, error) {
 }
 
 func (c *ZapClient) GetUserId(name string) (uint, error) {
-        user := UserHover{
-                UserID:   0,
-                Username: name,
-        }
+	user := UserHover{
+		UserID:   0,
+		Username: name,
+	}
 
-        if jsonSlc, err := json.Marshal(user); err == nil {
-                if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
+	if jsonSlc, err := json.Marshal(user); err == nil {
+		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
 			re := regexp.MustCompile(`follow.[0-9]+`)
-                        if re.MatchString(string(resp)) {
-                                idstr := strings.Split(re.FindString(string(resp)), `follow(`)[1]
+			if re.MatchString(string(resp)) {
+				idstr := strings.Split(re.FindString(string(resp)), `follow(`)[1]
 				if uid, err := strconv.ParseUint(idstr, 10, 32); err == nil {
 					return uint(uid), nil
 				}
-                        }
-                        return 0, errors.New("GetUserId no userid found")
-                }
-        }
-        return 0, errors.New("GetUserId failed")
+			}
+			return 0, errors.New("GetUserId no userid found")
+		}
+	}
+	return 0, errors.New("GetUserId failed")
 }
-
