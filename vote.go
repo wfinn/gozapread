@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+//VotePost implements Vote/Post
 func (c *ZapClient) VotePost(postid int, upvote bool, amount uint) error {
 	up := 0
 	if upvote {
@@ -20,6 +21,7 @@ func (c *ZapClient) VotePost(postid int, upvote bool, amount uint) error {
 	return errors.New("VotePost failed")
 }
 
+//VoteComment implements Vote/Comment
 func (c *ZapClient) VoteComment(commentid int, upvote bool, amount uint) error {
 	up := 0
 	if upvote {

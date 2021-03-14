@@ -1,10 +1,9 @@
 /*
-Go ZapRead.com Api Implementation
+Package gozapread is a library for ZapRead bots.
 
 Use gozapread.Login("username, "password") to get a ZapClient to work with.
 
 This is far from being complete.
-As ZapRead is currently in beta, this can break and change quite freqently.
 */
 package gozapread
 
@@ -23,11 +22,13 @@ import (
 	"time"
 )
 
+//ZapClient manages the session for a user
 type ZapClient struct {
 	client *http.Client
 	url    string
 }
 
+//Login returns a ZapClient for user
 func Login(user, pass string) (*ZapClient, error) {
 	cookieJar, _ := cookiejar.New(nil)
 	client := &http.Client{
@@ -48,7 +49,8 @@ func Login(user, pass string) (*ZapClient, error) {
 	return &ZapClient{}, errors.New("Login failed")
 }
 
-func (c *ZapClient) GetGroupId(postid uint) uint { // return an error
+//GetGroupID parses the group from a post
+func (c *ZapClient) GetGroupID(postid uint) uint { // return an error
 	if res, err := c.client.Get(fmt.Sprintf(c.url+`Post/Detail/%d`, postid)); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`data-groupid=\"[^\"]*`)
@@ -62,6 +64,7 @@ func (c *ZapClient) GetGroupId(postid uint) uint { // return an error
 	return 0
 }
 
+//GetNewToken returns a new __RequestVerificationToken
 func (c *ZapClient) GetNewToken() (string, error) {
 	if res, err := c.client.Get(c.url); err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
@@ -94,7 +97,7 @@ func (c *ZapClient) postJSON(url, jsonStr string, withcsrftoken bool) ([]byte, e
 	return nil, errors.New("postJSON failed")
 }
 
-// Parses tips from unread alerts. Hint: DismissAlert(Tip.AlertID)
+//ParseTips gets tips from unread alerts. Hint: DismissAlert(Tip.AlertID)
 func ParseTips(alerts AlertsTable) []Tip {
 	var tips []Tip
 	for _, alert := range alerts.Data {
@@ -111,8 +114,9 @@ func ParseTips(alerts AlertsTable) []Tip {
 	return tips
 }
 
+//IsUserNameOnline uses the User/Hover endpoint to see if a user is online
 func (c *ZapClient) IsUserNameOnline(name string) (bool, error) {
-	user := UserHover{
+	user := userHover{
 		UserID:   0,
 		Username: name,
 	}
@@ -130,12 +134,13 @@ func (c *ZapClient) IsUserNameOnline(name string) (bool, error) {
 	return false, errors.New("IsUserNameOnline failed")
 }
 
-func (c *ZapClient) IsUserIdOnline(id uint) (bool, error) {
-	user := UserHover{
+//IsUserIDOnline uses the User/Hover endpoint to see if a user is online
+func (c *ZapClient) IsUserIDOnline(id uint) (bool, error) {
+	user := userHover{
 		UserID:   id,
 		Username: "",
 	}
-
+	//TODO refactor this, make a 3rd function containing everything below
 	if jsonSlc, err := json.Marshal(user); err == nil {
 		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
 			if strings.Contains(string(resp), "Online") {
@@ -149,8 +154,9 @@ func (c *ZapClient) IsUserIdOnline(id uint) (bool, error) {
 	return false, errors.New("IsUserIdOnline failed")
 }
 
-func (c *ZapClient) GetUserId(name string) (uint, error) {
-	user := UserHover{
+//GetUserID uses the User/Hover endpoint to get the ID for a name
+func (c *ZapClient) GetUserID(name string) (uint, error) {
+	user := userHover{
 		UserID:   0,
 		Username: name,
 	}

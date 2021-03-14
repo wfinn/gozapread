@@ -56,8 +56,8 @@ func TestBalance(t *testing.T) {
 	}
 }
 
-func TestGetUserId(t *testing.T) {
-	userID, err := zapread.GetUserId("Zelgada")
+func TestGetUserID(t *testing.T) {
+	userID, err := zapread.GetUserID("Zelgada")
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,7 +69,7 @@ func TestGetUserId(t *testing.T) {
 func TestIsOnline(t *testing.T) {
 	var err error
 	var idOnline bool
-	if idOnline, err = zapread.IsUserIdOnline(1); err != nil {
+	if idOnline, err = zapread.IsUserIDOnline(1); err != nil {
 		t.Error(err)
 	}
 	var nameOnline bool
@@ -91,8 +91,8 @@ func TestGetNewToken(t *testing.T) {
 	}
 }
 
-func TestGetGroupId(t *testing.T) {
-	if groupID := zapread.GetGroupId(157); groupID == 0 {
+func TestGetGroupID(t *testing.T) {
+	if groupID := zapread.GetGroupID(157); groupID == 0 {
 		t.Error("GetGroupId returned 0")
 		//Maybe GetGroupId should return an error
 	} else {
@@ -121,9 +121,9 @@ func TestGetUnreadMessages(t *testing.T) {
 }
 
 func TestMessages(t *testing.T) {
-	userID, _:= zapread.GetUserId(config.Username)
+	userID, _ := zapread.GetUserID(config.Username)
 	if err := zapread.SendMessage("<b>test</b>", userID); err != nil {
-		t.Error(err)//This is probably the only place where Error is correct, I usually want Log and FailNow
+		t.Error(err) //This is probably the only place where Error is correct, I usually want Log and FailNow
 	}
 	if err := zapread.DismissAllMessages(); err != nil {
 		t.Error(err)

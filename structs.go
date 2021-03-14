@@ -1,5 +1,6 @@
 package gozapread
 
+//MessageTable is returned by GetMessageTable
 type MessageTable struct {
 	Draw            uint `json:"draw"`
 	RecordsTotal    uint `json:"recordsTotal"`
@@ -17,7 +18,7 @@ type MessageTable struct {
 	} `json:"data"`
 }
 
-type Post struct {
+type post struct {
 	PostID   uint   `json:"PostId"`
 	Content  string `json:"Content"`
 	GroupID  uint   `json:"GroupId"`
@@ -27,6 +28,7 @@ type Post struct {
 	Language string `json:"Language"`
 }
 
+//PostResp is returned by SubmitNewPost
 type PostResp struct {
 	Result      string `json:"result"`
 	Success     bool   `json:"success"`
@@ -34,17 +36,18 @@ type PostResp struct {
 	HTMLContent string `json:"HTMLContent"`
 }
 
-type Comment struct {
+type comment struct {
 	CommentContent string `json:"CommentContent"`
 	PostID         uint   `json:"PostId"`
 	CommentID      uint   `json:"CommentId"`
 	IsReply        bool   `json:"IsReply"`
 }
 
-type BalanceResp struct {
+type balanceResp struct {
 	Balance string `json:"balance"`
 }
 
+//AlertsTable is returned by GetAlertsTable
 type AlertsTable struct {
 	Draw            uint `json:"draw"`
 	RecordsTotal    uint `json:"recordsTotal"`
@@ -62,6 +65,7 @@ type AlertsTable struct {
 	} `json:"data"`
 }
 
+//UnreadMessages us returned by GetUnreadMessages
 type UnreadMessages struct {
 	Success  bool `json:"success"`
 	Messages []struct {
@@ -76,46 +80,44 @@ type UnreadMessages struct {
 	} `json:"messages"`
 }
 
-type Invoice struct {
-	Invoice string `json:"Invoice"`
-	Result  string `json:"Result"`
-	ID      uint   `json:"Id"`
+//invoice works for 2 endpoints, not all fields are always used
+type invoice struct {
+	Invoice   string `json:"Invoice"`
+	Result    string `json:"Result"`
+	ID        uint   `json:"Id"`
+	IsDeposit bool   `json:"isDeposit"`
 }
 
-type PaymentResp struct {
+type paymentResp struct {
 	Result string `json:"Result"`
 	Fees   uint   `json:"Fees"`
 }
 
-type PaymentReq struct {
+type paymentReq struct {
 	Success     bool   `json:"success"`
 	NumSatoshis string `json:"num_satoshis"`
 	Destination string `json:"destination"`
 }
 
+//Tip is used by ParseTips to store info on tips
 type Tip struct {
 	From    string
 	Amount  uint
 	AlertID uint
 }
 
-type ChatMessage struct {
+type chatMessage struct {
 	ID      uint   `json:"id"`
 	Content string `json:"content"`
 	IsChat  bool   `json:"isChat"`
 }
 
-type UserHover struct {
+type userHover struct {
 	UserID   uint   `json:"userId"`
 	Username string `json:"username"`
 }
 
-type PaymentCheck struct {
+type paymentCheck struct {
 	Success bool `json:"success"`
 	Result  bool `json:"result"`
-}
-
-type InvoiceResp struct {
-	Invoice   string `json:"invoice"`
-	IsDeposit bool   `json:"isDeposit"`
 }
