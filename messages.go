@@ -29,7 +29,7 @@ func (c *ZapClient) GetMessageTable() (MessageTable, error) {
 	return *new(MessageTable), errors.New("GetMessageTable failed")
 }
 
-func (c *ZapClient) DismissMessage(id uint) error { // should be int -1 means dismiss all
+func (c *ZapClient) DismissMessage(id int) error {
 	jsonStr := fmt.Sprintf(`{"id":%d}`, id)
 	if resp, err := c.postJSON("Messages/DismissMessage", jsonStr, false); err == nil {
 		if string(resp) == `{"Result":"Success"}` {
@@ -37,6 +37,10 @@ func (c *ZapClient) DismissMessage(id uint) error { // should be int -1 means di
 		}
 	}
 	return errors.New("DismissMessage failed")
+}
+
+func (c *ZapClient) DismissAllMessages() error {
+	return c.DismissMessage(-1);
 }
 
 func (c *ZapClient) GetAlertsTable() (AlertsTable, error) {

@@ -9,6 +9,7 @@ import (
 )
 
 var zapread *ZapClient
+var config TestConfig
 
 type TestConfig struct {
 	Username string `json:"username"`
@@ -16,7 +17,6 @@ type TestConfig struct {
 }
 
 func TestMain(m *testing.M) {
-	var config TestConfig
 	if data, err := ioutil.ReadFile("./testconfig.json"); err == nil {
 		if json.Unmarshal(data, &config) != nil {
 			fmt.Println("There's an error in testconfig.json:", err)
@@ -116,6 +116,30 @@ func TestGetAlertsTable(t *testing.T) {
 
 func TestGetUnreadMessages(t *testing.T) {
 	if _, err := zapread.GetUnreadMessages(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMessages(t *testing.T) {
+	userID, _:= zapread.GetUserId(config.Username)
+	if err := zapread.SendMessage("<b>test</b>", userID); err != nil {
+		t.Error(err)//This is probably the only place where Error is correct, I usually want Log and FailNow
+	}
+	if err := zapread.DismissAllMessages(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestVoteComment(t *testing.T) {
+	t.Skip("Voting costs money")
+	if err := zapread.VoteComment(21764, true, 1); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestVotePost(t *testing.T) {
+	t.Skip("Voting costs money")
+	if err := zapread.VotePost(1, true, 1); err != nil {
 		t.Error(err)
 	}
 }
