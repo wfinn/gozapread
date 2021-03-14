@@ -107,3 +107,15 @@ func TestGetMessageTable(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetAlertsTable(t *testing.T) {
+	if _, err := zapread.GetAlertsTable(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGetUnreadMessages(t *testing.T) {
+	if _, err := zapread.GetUnreadMessages(); err != nil {
+		t.Error(err)
+	}
+}
