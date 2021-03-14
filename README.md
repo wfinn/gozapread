@@ -38,7 +38,6 @@ Before running `go test` you need to put the login details of a zapread account 
 Currently 1 satoshi is required in the test account, more requirements may follow with other tests.
 
 ## Todo
-- refactor the hell out of this mess
 - provide more examples
 
 ## Next endpoints, probably
