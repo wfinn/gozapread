@@ -40,7 +40,6 @@ Currently 1 satoshi is required in the test account, more requirements may follo
 ## Todo
 - provide more examples
 - check if the api specifically said something was unsuccessful
-- make all {
 
 ## Next endpoints, probably
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
