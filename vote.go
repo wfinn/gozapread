@@ -1,7 +1,6 @@
 package gozapread
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -16,9 +15,12 @@ func (c *ZapClient) VotePost(postid int, upvote bool, amount uint) error {
 	if resp, err := c.postJSON("Vote/Post", jsonStr, true); err == nil {
 		if strings.Contains(string(resp), `"success":true`) {
 			return nil
+		} else {
+			return fmt.Errorf("%svoting the post failed: %w", updown(upvote), err)
 		}
+	} else {
+		return err
 	}
-	return errors.New("VotePost failed")
 }
 
 //VoteComment implements Vote/Comment
@@ -31,7 +33,19 @@ func (c *ZapClient) VoteComment(commentid int, upvote bool, amount uint) error {
 	if resp, err := c.postJSON("Vote/Comment", jsonStr, true); err == nil {
 		if strings.Contains(string(resp), `"success":true`) {
 			return nil
+		} else {
+			return fmt.Errorf("%svoting the comment failed: %w", updown(upvote), err)
 		}
+	} else {
+
+		return err
 	}
-	return errors.New("VoteComment failed")
+}
+
+func updown(up bool) string {
+	updown := "up"
+	if !up {
+		updown = "down"
+	}
+	return updown
 }

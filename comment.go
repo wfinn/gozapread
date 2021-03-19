@@ -2,7 +2,7 @@ package gozapread
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -11,10 +11,16 @@ func (c *ZapClient) AddComment(content string, postid, commentid uint) error {
 	comment := comment{CommentContent: content, PostID: postid, CommentID: commentid, IsReply: commentid != 0}
 	if jsonSlc, err := json.Marshal(comment); err == nil {
 		if resp, err := c.postJSON("Comment/AddComment", string(jsonSlc), true); err == nil {
-			if strings.Contains(string(resp), `"success":true`) {
+			respStr := string(resp)
+			if strings.Contains(respStr, `"success":true`) {
 				return nil
+			} else {
+				return fmt.Errorf("adding the comment wasn't successful: %s %w", respStr, err)
 			}
+		} else {
+			return err
 		}
+	} else {
+		return err
 	}
-	return errors.New("AddComment failed")
 }

@@ -2,7 +2,6 @@ package gozapread
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -14,9 +13,12 @@ func (c *ZapClient) GetDepositInvoice(amount uint) (string, error) {
 		var invoice invoice
 		if json.Unmarshal(resp, &invoice) == nil {
 			return invoice.Invoice, nil
+		} else {
+			return "", fmt.Errorf("couldn't unmarshal the json: %w", err)
 		}
+	} else {
+		return "", err
 	}
-	return "", errors.New("GetDepositInvoice failed")
 }
 
 //CheckPayment implements Lightning/CheckPayment
@@ -25,17 +27,24 @@ func (c *ZapClient) CheckPayment(req string) (bool, error) {
 		Invoice:   req,
 		IsDeposit: true,
 	}
-	if jsonSlc, err := json.Marshal(invoice); err == nil {
+	if jsonSlc, err := json.Marshal(invoice); err != nil {
+		return false, err
+	} else {
 		if resp, err := c.postJSON("Lightning/CheckPayment/", string(jsonSlc), false); err == nil {
 			var check paymentCheck
-			if json.Unmarshal(resp, &check) == nil {
+			if err := json.Unmarshal(resp, &check); err == nil {
 				if check.Success {
 					return check.Result, nil
+				} else {
+					return false, fmt.Errorf("checking the payment wasn't successful.")
 				}
+			} else {
+				return false, err
 			}
+		} else {
+			return false, err
 		}
 	}
-	return false, errors.New("CheckPayment failed")
 }
 
 //SubmitPaymentRequest implements Lightning/SubmitPaymentRequest
@@ -46,11 +55,12 @@ func (c *ZapClient) SubmitPaymentRequest(request string) (uint, error) {
 		var payment paymentResp
 		if json.Unmarshal(resp, &payment) == nil {
 			return payment.Fees, nil
+		} else {
+			return 0, err
 		}
 	} else {
 		return 0, err
 	}
-	return 0, errors.New("SubmitPaymentRequest failed")
 }
 
 //ValidatePaymentRequest implements Lightning/ValidatePaymentRequest
@@ -60,11 +70,16 @@ func (c *ZapClient) ValidatePaymentRequest(request string) (uint, error) {
 	if resp, err := c.postJSON("Lightning/ValidatePaymentRequest", jsonStr, true); err == nil {
 		fmt.Println(string(resp))
 		var req paymentReq
-		if json.Unmarshal(resp, &req) == nil {
+		if err := json.Unmarshal(resp, &req); err != nil {
+			return 0, err
+		} else {
 			if amount, err := strconv.ParseUint(req.NumSatoshis, 10, 32); err == nil {
 				return uint(amount), nil
+			} else {
+				return 0, err
 			}
 		}
+	} else {
+		return 0, err
 	}
-	return 0, errors.New("ValidatePaymentRequest failed")
 }

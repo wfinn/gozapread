@@ -10,7 +10,6 @@ package gozapread
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -36,22 +35,28 @@ func Login(user, pass string) (*ZapClient, error) {
 		Timeout: 30 * time.Second,
 	}
 	c := &ZapClient{client: client, url: "https://www.zapread.com/"}
-	if token, err := c.GetNewToken(); err == nil {
+	token, err := c.GetNewToken()
+	if err == nil {
 		logindetails := url.Values{"__RequestVerificationToken": {token}, "UserName": {user}, "Password": {pass}, "RememberMe": {"false"}}
 		if res, err := client.PostForm(c.url+"Account/Login/", logindetails); err == nil {
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
 				if strings.Contains(string(body), "/Account/LogOff/") { //TODO better validation?
 					return c, nil
+				} else {
+					return &ZapClient{}, fmt.Errorf("couldn't verify a successful login")
 				}
 			}
+		} else {
+			return &ZapClient{}, fmt.Errorf("the request for logging in failed: %w", err)
 		}
 	}
-	return &ZapClient{}, errors.New("Login failed")
+	return &ZapClient{}, fmt.Errorf("the login failed: %w", err)
 }
 
 //GetGroupID parses the group from a post
 func (c *ZapClient) GetGroupID(postid uint) uint { // return an error
-	if res, err := c.client.Get(fmt.Sprintf(c.url+`Post/Detail/%d`, postid)); err == nil {
+	res, err := c.client.Get(fmt.Sprintf(c.url+`Post/Detail/%d`, postid))
+	if err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`data-groupid=\"[^\"]*`)
 			if re.MatchString(string(body)) {
@@ -66,21 +71,23 @@ func (c *ZapClient) GetGroupID(postid uint) uint { // return an error
 
 //GetNewToken returns a new __RequestVerificationToken
 func (c *ZapClient) GetNewToken() (string, error) {
-	if res, err := c.client.Get(c.url); err == nil {
+	res, err := c.client.Get(c.url)
+	if err == nil {
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
 			re := regexp.MustCompile(`<input name="__RequestVerificationToken" type="hidden" value="[^"]+`)
 			if re.MatchString(string(body)) {
 				token := strings.Split(re.FindString(string(body)), `value="`)[1]
 				return token, nil
 			}
-			return "", errors.New("GetNewToken No token found")
+			return "", fmt.Errorf("GetNewToken No token found")
 		}
 	}
-	return "", errors.New("GetNewToken failed")
+	return "", fmt.Errorf("the request to get the token failed: %w", err)
 }
 
 func (c *ZapClient) postJSON(url, jsonStr string, withcsrftoken bool) ([]byte, error) {
-	if req, err := http.NewRequest(http.MethodPost, c.url+url, bytes.NewBuffer([]byte(jsonStr))); err == nil {
+	req, err := http.NewRequest(http.MethodPost, c.url+url, bytes.NewBuffer([]byte(jsonStr)))
+	if err == nil {
 		req.Header.Set("Content-Type", "application/json")
 		if withcsrftoken {
 			token, err := c.GetNewToken()
@@ -92,9 +99,11 @@ func (c *ZapClient) postJSON(url, jsonStr string, withcsrftoken bool) ([]byte, e
 		if resp, err := c.client.Do(req); err == nil {
 			defer resp.Body.Close()
 			return ioutil.ReadAll(resp.Body)
+		} else {
+			return nil, fmt.Errorf("the request to %s failed: %w", url, err)
 		}
 	}
-	return nil, errors.New("postJSON failed")
+	return nil, err
 }
 
 //ParseTips gets tips from unread alerts. Hint: DismissAlert(Tip.AlertID)
@@ -121,7 +130,8 @@ func (c *ZapClient) IsUserNameOnline(name string) (bool, error) {
 		Username: name,
 	}
 
-	if jsonSlc, err := json.Marshal(user); err == nil {
+	jsonSlc, err := json.Marshal(user)
+	if err == nil {
 		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
 			if strings.Contains(string(resp), "Online") {
 				return true, nil
@@ -129,9 +139,11 @@ func (c *ZapClient) IsUserNameOnline(name string) (bool, error) {
 				return false, nil
 			}
 
+		} else {
+			return false, err
 		}
 	}
-	return false, errors.New("IsUserNameOnline failed")
+	return false, err
 }
 
 //IsUserIDOnline uses the User/Hover endpoint to see if a user is online
@@ -141,7 +153,8 @@ func (c *ZapClient) IsUserIDOnline(id uint) (bool, error) {
 		Username: "",
 	}
 	//TODO refactor this, make a 3rd function containing everything below
-	if jsonSlc, err := json.Marshal(user); err == nil {
+	jsonSlc, err := json.Marshal(user)
+	if err == nil {
 		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
 			if strings.Contains(string(resp), "Online") {
 				return true, nil
@@ -149,9 +162,11 @@ func (c *ZapClient) IsUserIDOnline(id uint) (bool, error) {
 				return false, nil
 			}
 
+		} else {
+			return false, err
 		}
 	}
-	return false, errors.New("IsUserIdOnline failed")
+	return false, err
 }
 
 //GetUserID uses the User/Hover endpoint to get the ID for a name
@@ -161,17 +176,20 @@ func (c *ZapClient) GetUserID(name string) (uint, error) {
 		Username: name,
 	}
 
-	if jsonSlc, err := json.Marshal(user); err == nil {
+	jsonSlc, err := json.Marshal(user)
+	if err == nil {
 		if resp, err := c.postJSON("User/Hover/", string(jsonSlc), true); err == nil {
 			re := regexp.MustCompile(`follow.[0-9]+`)
 			if re.MatchString(string(resp)) {
 				idstr := strings.Split(re.FindString(string(resp)), `follow(`)[1]
 				if uid, err := strconv.ParseUint(idstr, 10, 32); err == nil {
 					return uint(uid), nil
+				} else {
+					return 0, err
 				}
 			}
-			return 0, errors.New("GetUserId no userid found")
+			return 0, fmt.Errorf("GetUserId no userid found")
 		}
 	}
-	return 0, errors.New("GetUserId failed")
+	return 0, err
 }

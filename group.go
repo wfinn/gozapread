@@ -1,7 +1,6 @@
 package gozapread
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,9 +10,12 @@ func (c *ZapClient) JoinGroup(groupid uint) error {
 	if resp, err := c.postJSON("Group/JoinGroup/", jsonStr, true); err == nil {
 		if string(resp) == `{"success":true}` {
 			return nil
+		} else {
+			return fmt.Errorf("joining the group wasn't successful: %w", err)
 		}
+	} else {
+		return err
 	}
-	return errors.New("JoinGroup failed")
 }
 
 //LeaveGroup implements Group/LeaveGroup
@@ -22,7 +24,10 @@ func (c *ZapClient) LeaveGroup(groupid uint) error {
 	if resp, err := c.postJSON("Group/LeaveGroup/", jsonStr, true); err == nil {
 		if string(resp) == `{"success":true}` {
 			return nil
+		} else {
+			return fmt.Errorf("leaving the group wasn't successful")
 		}
+	} else {
+		return err
 	}
-	return errors.New("LeaveGroup failed")
 }

@@ -1,7 +1,6 @@
 package gozapread
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,7 +10,10 @@ func (c *ZapClient) TipUser(userid, amount uint) error {
 	if resp, err := c.postJSON("Manage/TipUser", jsonStr, true); err == nil {
 		if string(resp) == `{"Result":"Success"}` {
 			return nil
+		} else {
+			return fmt.Errorf("tipping the user wasn't successful")
 		}
+	} else {
+		return err
 	}
-	return errors.New("TipUser failed")
 }
