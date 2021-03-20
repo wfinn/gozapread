@@ -2,6 +2,7 @@ package gozapread
 
 import (
 	"fmt"
+	"net/url"
 )
 
 //TipUser implements Manage/TipUser
@@ -16,4 +17,18 @@ func (c *ZapClient) TipUser(userid, amount uint) error {
 	} else {
 		return err
 	}
+}
+
+//UpdateAboutMe implements Manage/UpdateAboutMe/
+func (c *ZapClient) UpdateAboutMe(aboutme string) error {
+	token, err := c.GetNewToken()
+	if err == nil {
+		values := url.Values{"__RequestVerificationToken": {token}, "AboutMe": {aboutme}}
+		if _, err := c.client.PostForm(c.url+"Manage/UpdateAboutMe/", values); err == nil {
+			return nil
+		} else {
+			return fmt.Errorf("the request to Manage/UpdateAboutMe failed: %w", err)
+		}
+	}
+	return err
 }

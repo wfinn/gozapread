@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 var zapread *ZapClient
@@ -17,6 +20,7 @@ type TestConfig struct {
 }
 
 func TestMain(m *testing.M) {
+	rand.Seed(time.Now().UnixNano())
 	if data, err := ioutil.ReadFile("./testconfig.json"); err == nil {
 		if json.Unmarshal(data, &config) != nil {
 			fmt.Println("There's an error in testconfig.json:", err)
@@ -141,5 +145,23 @@ func TestVotePost(t *testing.T) {
 	t.Skip("Voting costs money")
 	if err := zapread.VotePost(1, true, 1); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestUpdateAboutMe(t *testing.T) {
+	newaboutme := fmt.Sprint(rand.Float64())
+	if err := zapread.UpdateAboutMe(newaboutme); err != nil {
+		t.Error(err)
+	}
+	if resp, err := zapread.client.Get(zapread.url + "user/" + config.Username); err != nil {
+		t.Error(err)
+	} else {
+		if body, err := ioutil.ReadAll(resp.Body); err == nil {
+			if !strings.Contains(string(body), newaboutme) {
+				t.Error(fmt.Errorf("couldn't find the new about me text"))
+			}
+		} else {
+			t.Error(err)
+		}
 	}
 }

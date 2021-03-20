@@ -44,4 +44,3 @@ Currently 1 satoshi is required in the test account, more requirements may follo
 ## Next endpoints, probably
 - **ChangePassword(old, new string) error** /Manage/ChangePassword
 - /Home/TopPosts
-- /Manage/UpdateAboutMe/ __RequestVerificationToken=abc&AboutMe=text
