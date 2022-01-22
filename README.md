@@ -41,7 +41,5 @@ Currently, at least 1 Satoshi is required in the test account, more requirements
 ## Todo
 - provide more examples
 - check if the api specifically said something was unsuccessful
-
-## Next endpoints, probably
-- **ChangePassword(old, new string) error** /Manage/ChangePassword
-- /Home/TopPosts
+- WebSockets, realtime.zapread.com
+- New API using API keys zapread.com/swagger
